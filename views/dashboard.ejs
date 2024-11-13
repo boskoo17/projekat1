@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Chart.js for rendering charts -->
+</head>
+<body>
+    <div class="container">
+    <h2>Hello, <%= user.email %>!</h2>
+
+    <h2>Upload Data File</h2>
+    <form action="/dashboard/upload" method="POST" enctype="multipart/form-data">
+        <input type="file" name="dataFile" required>
+        <button type="submit">Upload</button>
+    </form>
+
+    <!-- Chart Selection -->
+    <h3>Select Chart Type</h3>
+    <form id="chartForm">
+        <select name="chartType" id="chartType">
+            <option value="bar">Bar Chart</option>
+            <option value="line">Line Chart</option>
+            <option value="pie">Pie Chart</option>
+            <option value="scatter">Scatter Plot</option>
+        </select>
+        <button type="button" onclick="renderChart()">Display Chart</button>
+    </form>
+
+    <!-- Canvas for Chart -->
+    <canvas id="myChart" width="400" height="400"></canvas>
+        <!-- Display CSV Data if Available -->
+        <% if (csvData && csvData.length > 0) { %>
+            <h2>Uploaded CSV Data</h2>
+            <table border="1">
+                <thead>
+                    <tr>
+                        <% Object.keys(csvData[0]).forEach((header) => { %>
+                            <th><%= header %></th>
+                        <% }) %>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% csvData.forEach((row) => { %>
+                        <tr>
+                            <% Object.values(row).forEach((cell) => { %>
+                                <td><%= cell %></td>
+                            <% }) %>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        <% } %>
+
+    <form action="/logout" method="GET">
+        <button type="submit">Logout</button>
+    </form>
+    </div>
+
+    <script>
+        async function renderChart() {
+            const chartType = document.getElementById('chartType').value;
+
+            const response = await fetch(`/dashboard/chart-data?type=${chartType}`);
+            const data = await response.json();
+
+            const ctx = document.getElementById('myChart').getContext('2d');
+            new Chart(ctx, {
+                type: chartType,
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: chartType + ' Chart',
+                        data: data.values,
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+    </script>
+</body>
+</html>
